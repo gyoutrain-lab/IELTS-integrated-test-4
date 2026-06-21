@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Official IELTS Proficiency Certification System</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial; background: #f4f7f6; padding: 20px; color: #333; }
+        .container { max-width: 900px; margin: auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+        h1 { text-align: center; color: #1a5276; margin-bottom: 5px; }
+        h2 { color: #2c3e50; border-bottom: 2px solid #34495e; padding-bottom: 8px; margin-top: 30px; }
+        .grid-row { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 15px; }
+        textarea, input, select { width: 100%; padding: 12px; margin: 8px 0; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+        button { width: 100%; padding: 14px; background: #1a5276; color: white; border: none; font-weight: bold; cursor: pointer; margin-top: 10px; border-radius: 4px; transition: background 0.3s; }
+        button:hover { background: #2471a3; }
+        .active-rec { background: #c0392b !important; }
+        
+        /* Interactive Live Audit Box styling */
+        .audit-box { border: 1px solid #ccc; background: #fafafa; padding: 15px; min-height: 100px; margin-top: 10px; border-radius: 4px; line-height: 1.6; white-space: pre-wrap; }
+        .error-flag { color: #c0392b; background-color: #fce4d6; font-weight: bold; text-decoration: underline; border-radius: 2px; padding: 0 2px; }
+        .success-flag { color: #27ae60; background-color: #e2f0d9; font-weight: bold; border-radius: 2px; padding: 0 2px; }
+        
+        /* Speaking Section Specific Style */
+        .question-card { background: #ebf5fb; border-left: 6px solid #2980b9; padding: 15px; margin: 15px 0; border-radius: 4px; }
+        .speaking-guide { font-size: 0.9em; color: #555; background: #fff; padding: 10px; border: 1px dashed #b4cedd; margin-top: 8px; border-radius: 4px; }
+        
+        /* Official Certificate Layout */
+        #certArea { display: none; border: 12px double #1a5276; padding: 50px; margin-top: 40px; position: relative; }
+        .cert-header { text-align: center; margin-bottom: 30px; }
+        .audit-table { width: 100%; border-collapse: collapse; margin: 20px 0; }
+        .audit-table td, .audit-table th { border: 1px solid #ddd; padding: 12px; text-align: left; }
+        .audit-table th { background: #f2f2f2; }
+        @media print { .no-print { display: none; } body { background: white; } .container { box-shadow: none; padding: 0; } }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <!-- INPUT AREA -->
+    <div class="no-print">
+        <h1>IELTS Proficiency Certification System</h1>
+        <p style="text-align:center; color:#7f8c8d; margin-top:0;">Dual Writing Audit & Speaking Interview Engine</p>
+        
+        <h2>1. Candidate Information</h2>
+        <div class="grid-row">
+            <input type="text" id="cName" placeholder="Candidate Full Name (e.g., Giyono Asfarrasyid)">
+            <input type="text" id="cID" placeholder="Candidate ID Number (e.g., 12345)">
+        </div>
+
+        <h2>2. Writing Competency Audit Module</h2>
+        <label for="topic">Select Target Writing Essay Domain:</label>
+        <select id="topic" onchange="loadCompetency()">
+            <option value="Health">1. Health & Medicine</option>
+            <option value="Environment" selected>2. Environment & Sustainability</option>
+            <option value="Education">3. Education & Learning</option>
+            <option value="Technology">4. Technology & Innovation</option>
+            <option value="Globalization">5. Globalization & Society</option>
+            <option value="Transport">6. Public Transport & Infrastructure</option>
+            <option value="Crime">7. Criminal Justice & Law</option>
+            <option value="Employment">8. Employment & Career</option>
+            <option value="Government">9. Government & Policy</option>
+            <option value="Media">10. Media & Advertising</option>
+        </select>
+        
+        <textarea id="essay" rows="10" placeholder="Type or copy your essay response here..."></textarea>
+        <button onclick="reviewEssay()" style="background:#34495e;">🔍 Review & Audit Essay (Check Target Errors)</button>
+        <div id="reviewDisplay" class="audit-box" style="display:none;"></div>
+        
+        <h2>3. High-Frequency Speaking Interview Module</h2>
+        <p style="color:#666; font-size:0.95em;">Select a core prompt to run an interview drill. Click the recording button to stream your oral response directly into the dynamic text engine canvas.</p>
+        
+        <label for="speakPromptSelect">Select High-Frequency IELTS Interview Question:</label>
+        <select id="speakPromptSelect" onchange="updateSpeakingQuestion()">
+            <option value="q1">Q1: Personal Introduction & Professional Status (Job, Position, Duties)</option>
+            <option value="q2">Q2: Educational Trajectory & Academic Background</option>
+            <option value="q3">Q3: Geographical Origin & Structural Attributes of Your City/Hometown</option>
+            <option value="q4">Q4: Core Interests, Leisure Optimization & Personal Pursuits</option>
+            <option value="q5">Q5: Work Environment Dynamics & Technological Adaptability</option>
+            <option value="q6">Q6: Changing Career Trajectories & Future Professional Milestones</option>
+            <option value="q7">Q7: Tourism Impact & Environmental Realities within Your Region</option>
+            <option value="q8">Q8: The Evolving Role of Traditional vs. Digital Media Systems</option>
+            <option value="q9">Q9: Public Transportation Networks & Urban Mobility Challenges</option>
+            <option value="q10">Q10: The Convergence of Automation, Career Shifts & Labor Optimization</option>
+        </select>
+
+        <div class="question-card">
+            <strong id="displayQuestionTitle">Current Active Speaking Prompt:</strong>
+            <p id="displayQuestionText" style="font-size:1.1em; color:#1b4f72; font-weight:600; margin:10px 0;"></p>
+            <div class="speaking-guide" id="displayQuestionGuide"></div>
+        </div>
+
+        <button id="recordBtn" onclick="toggleSpeech()" style="background:#c0392b;">🎙️ Activate Voice Input (Speaking Mode)</button>
+        <textarea id="speakingOutput" rows="6" placeholder="Your live spoken output will stream here textually..."></textarea>
+        <button onclick="transferSpeechToEssay()" style="background:#7f8c8d;">📋 Inject Spoken Text into Essay Audit Canvas Above</button>
+        
+        <button onclick="runAudit()" style="background:#27ae60; font-size:1.1em; margin-top:25px;">Generate Official IELTS Certificate</button>
+    </div>
+
+    <!-- CERTIFICATE DISPLAY AREA -->
+    <div id="certArea">
+        <div class="cert-header">
+            <h2>CERTIFICATE OF ENGLISH PROFICIENCY</h2>
+            <p>Issued by the IELTS Mastery Audit System</p>
+        </div>
+        <p><strong>Candidate Name:</strong> <span id="rName"></span></p>
+        <p><strong>Candidate ID:</strong> <span id="rID"></span></p>
+        <p><strong>Competency Area:</strong> <span id="rTopic"></span></p>
+        
+        <table class="audit-table">
+            <tr><th>Proficiency Indicators</th><th>Band Score</th></tr>
+            <tr><td>Task Response / Spontaneous Fluency (TR)</td><td id="rTR"></td></tr>
+            <tr><td>Cohesion & Coherence (CC)</td><td id="rCC"></td></tr>
+            <tr><td>Lexical Resource (LR)</td><td id="rLR"></td></tr>
+            <tr><td>Nominalization Density</td><td id="rNom"></td></tr>
+            <tr><td>Grammatical Range & Accuracy (GRA)</td><td id="rGRA"></td></tr>
+        </table>
+        <h1 style="text-align:center;">OVERALL BAND: <span id="rBand"></span></h1>
+        <p style="text-align:center; font-style:italic;">This candidate has demonstrated professional command of the English language within the audited competency framework.</p>
+        <button class="no-print" onclick="window.print()">Download/Print Official Certificate</button>
+    </div>
+</div>
+
+<script>
+// Combined Competency Resource Bank
+const profiles = {
+    "Health": ["preventative", "public health", "pharmaceutical", "epidemic", "interventions", "physiological", "medical", "chronic", "care"],
+    "Environment": ["sustainability", "biodiversity", "emissions", "ecological", "renewable", "conservation", "climate", "mitigation", "stewardship", "resource"],
+    "Education": ["pedagogical", "curriculum", "cognitive", "academic", "critical thinking", "vocational", "student-centered"],
+    "Technology": ["automation", "connectivity", "artificial", "innovation", "infrastructure", "implementation", "digital", "security"],
+    "Globalization": ["international", "cultural", "demographic", "economic", "migration", "borderless", "market", "liberalization"],
+    "Transport": ["infrastructure", "urban", "congestion", "accessibility", "mobility", "planning", "transit", "commute"],
+    "Crime": ["rehabilitation", "judicial", "enforcement", "recidivism", "legislative", "punishment", "preventive", "law-abiding"],
+    "Employment": ["workforce", "labor", "professional", "career", "productivity", "remote", "salary", "trajectory"],
+    "Government": ["fiscal", "legislative", "administrative", "funding", "budget", "regulation", "societal", "governance"],
+    "Media": ["broadcasting", "advertising", "censorship", "influence", "communication", "awareness", "literacy", "news"]
+};
+
+// Speaking Bank Mapping
+const speakingBank = {
+    "q1": {
+        text: "Could you describe your current professional role, your primary organizational responsibilities, and your overall career trajectory?",
+        guide: "<strong>Band 9 Blueprint:</strong> Avoid 'I am a nurse/teacher'. Use: <em>'I am currently involved in the structural development of...'</em> or <em>'My primary operational responsibilities center around...'</em>"
+    },
+    "q2": {
+        text: "How has your educational background or specialized training prepared you for the challenges of your current industry?",
+        guide: "<strong>Band 9 Blueprint:</strong> Connect degrees using advanced abstract subjects: <em>'The structural optimization of my academic curriculum provided a vital cognitive foundation in...'</em>"
+    },
+    "q3": {
+        text: "What are the defining geographical, economic, or infrastructural characteristics of your hometown or city?",
+        guide: "<strong>Band 9 Blueprint:</strong> Avoid simple lists. Use nominalization: <em>'The urban landscape of my metropolitan area is characterized by a rapid expansion of transport infrastructure...'</em>"
+    },
+    "q4": {
+        text: "In what ways do you optimize your leisure time to pursue personal interests, and how do these activities contribute to your professional life?",
+        guide: "<strong>Band 9 Blueprint:</strong> Avoid 'I like reading'. Use: <em>'I consciously dedicate my temporal resources to the pursuit of critical literary analysis, which in turn enhances my...'</em>"
+    },
+    "q5": {
+        text: "How has technological integration transformed the daily workflow and communication systems within your professional environment?",
+        guide: "<strong>Band 9 Blueprint:</strong> Use complex causal connectors: <em>'The accelerated automation of our administrative framework has fundamentally decoupled productivity from static physical constraints...'</em>"
+    },
+    "q6": {
+        text: "What significant professional milestones do you intend to hit over the coming decade, and how do you plan to navigate career shifts?",
+        guide: "<strong>Band 9 Blueprint:</strong> Deploy inverted future conditionals: <em>'Should opportunities for international migration manifest, my objective is the comprehensive execution of...'</em>"
+    },
+    "q7": {
+        text: "How does the influx of international tourism affect the ecological stability and cultural fabric of your region?",
+        guide: "<strong>Band 9 Blueprint:</strong> Balance the perspectives: <em>'While tourism acts as an economic catalyst, it simultaneously accelerates the systemic degradation of local ecosystems...'</em>"
+    },
+    "q8": {
+        text: "To what extent has the rapid rise of digital media infrastructure undermined the authority and viability of traditional broadcasting networks?",
+        guide: "<strong>Band 9 Blueprint:</strong> Use compound transitions: <em>'The unchecked commercialization of digital streams has triggered a paradigm shift, thereby forcing traditional networks to...'</em>"
+    },
+    "q9": {
+        text: "What structural measures should municipal authorities implement to mitigate gridlock and congestion within metropolitan public transit systems?",
+        guide: "<strong>Band 9 Blueprint:</strong> Trigger high-level inversion syntax frames: <em>'Were municipal planners to invest heavily in integrated rapid rail transit infrastructure, urban gridlock would...'</em>"
+    },
+    "q10": {
+        text: "In your view, does the expanding automation of modern labor systems represent an existential threat to employment or an opportunity for resource optimization?",
+        guide: "<strong>Band 9 Blueprint:</strong> Use abstract balance matrix framing: <em>'The transition toward automated labor trajectories does not imply a total cessation of human employment, but rather a structural transformation...'</em>"
+    }
+};
+
+function loadCompetency() {
+    document.getElementById('essay').placeholder = "Keywords required for 9.0 TR: " + profiles[document.getElementById('topic').value].join(', ');
+}
+
+function updateSpeakingQuestion() {
+    const selectedQ = document.getElementById('speakPromptSelect').value;
+    document.getElementById('displayQuestionText').innerText = speakingBank[selectedQ].text;
+    document.getElementById('displayQuestionGuide').innerHTML = speakingBank[selectedQ].guide;
+}
+
+function transferSpeechToEssay() {
+    const spokenText = document.getElementById('speakingOutput').value;
+    if(!spokenText.trim()) { alert("The speaking input field is currently empty."); return; }
+    document.getElementById('essay').value = spokenText;
+    alert("Text successfully injected into the essay analysis module above.");
+}
+
+// Speech Recognition Subsystem
+const recognition = new (window.SpeechRecognition || window.webkitSpeechRecognition)();
+recognition.continuous = true;
+recognition.interimResults = true;
+let isRecording = false;
+
+recognition.onresult = (event) => {
+    let transcript = "";
+    for(let i = 0; i < event.results.length; i++) {
+        transcript += event.results[i][0].transcript;
+    }
+    document.getElementById('speakingOutput').value = transcript;
+};
+
+function toggleSpeech() {
+    const btn = document.getElementById('recordBtn');
+    if (isRecording) { 
+        recognition.stop(); 
+        btn.innerText = "🎙️ Activate Voice Input (Speaking Mode)"; 
+        btn.classList.remove('active-rec');
+    } else { 
+        recognition.start(); 
+        btn.innerText = "⏹️ Recording Oral Stream... (Click to Stop)"; 
+        btn.classList.add('active-rec');
+    }
+    isRecording = !isRecording;
+}
+
+// Sensitivity Verification Filter Engine (Visual Code Auditor)
+function reviewEssay() {
+    let text = document.getElementById('essay').value;
+    if(!text.trim()) { alert("Please input or record text first."); return; }
+    
+    const criticalErrors = [
+        { regex: /\(Grammatical Complexity[^)]*\)/gi, label: "[CRITICAL: Remove Parenthetical Meta Tag Labels]" },
+        { regex: /\b(point to|good|bad|big|thing|nations pollute|i am a|i like to)\b/gi, label: "[MID-TIER PROSE: Replace with formal noun/verb combinations]" }
+    ];
+
+    const band9Structures = [
+        { regex: /\b(were governments to|had authorities executed|should a nation|were healthcare systems to|were municipal planners to|had academic institutions)\b/gi, label: "Subjunctive Inversion Framework" },
+        { regex: /\b(environmental stewardship|regenerative development|systemic degradation|ecological instability|unbridled growth|structural development|primary operational responsibilities|urban landscape|rapid expansion)\b/gi, label: "Band 9 Collocation" },
+        { regex: /\b(to begin with|conversely|consequently|as a direct consequence|in conclusion|which in turn)\b/gi, label: "Explicit Structural Discourse Joint" }
+    ];
+
+    let processedHtml = text;
+
+    criticalErrors.forEach(item => {
+        processedHtml = processedHtml.replace(item.regex, (match) => `<span class="error-flag">${match} ${item.label}</span>`);
+    });
+
+    band9Structures.forEach(item => {
+        processedHtml = processedHtml.replace(item.regex, (match) => `<span class="success-flag">${match} (${item.label})</span>`);
+    });
+
+    const displayBox = document.getElementById('reviewDisplay');
+    displayBox.innerHTML = "<strong>Sensitivity Monitoring Matrix View:</strong><br><br>" + processedHtml;
+    displayBox.style.display = "block";
+}
+
+// Grading Audit Matrix Logic Engine
+function runAudit() {
+    const text = document.getElementById('essay').value.trim();
+    const words = text.toLowerCase().match(/\b(\w+)\b/g);
+    if (!words || words.length < 30) { alert("Insufficient text length for comprehensive evaluation."); return; }
+    
+    const totalWords = words.length;
+    const activeTopic = document.getElementById('topic').value;
+    const dict = profiles[activeTopic];
+    
+    // 1. Task Response Core Calculator
+    let topicHits = dict.filter(w => text.toLowerCase().includes(w)).length;
+    let baselineTR = (topicHits / dict.length) * 7.0 + 2.0; 
+    if (text.toLowerCase().includes("essay will") || text.toLowerCase().includes("responsibilities center") || text.toLowerCase().includes("trajectory")) baselineTR += 0.5;
+    const tr = Math.min(9.0, Math.max(1.0, baselineTR)).toFixed(1);
+    
+    // 2. Cohesion & Coherence Core Calculator
+    const transitions = (text.match(/\b(however|consequently|therefore|to begin with|conversely|in conclusion|furthermore|moreover|on the other hand|as a direct result|which in turn)\b/gi) || []).length;
+    let ccScore = 4.0 + (transitions * 1.2); 
+    const paragraphCount = text.split(/\n+/).filter(p => p.trim().length > 10).length;
+    if (paragraphCount === 4 || text.includes("trajectory")) ccScore += 1.0; 
+    const cc = Math.min(9.0, Math.max(1.0, ccScore)).toFixed(1);
+    
+    // 3. Lexical Resource Core Calculator
+    const uniqueWordCount = new Set(words).size;
+    const lexicalDiversity = uniqueWordCount / totalWords;
+    let lrScore = (lexicalDiversity * 12) + 3.0;
+    const highResourceWords = (text.match(/\b(stewardship|prosperity|degradation|existential|unbridled|catastrophic|instability|decouple|protocols|viability|trajectory|optimization|infrastructure|metropolitan)\b/gi) || []).length;
+    if (highResourceWords > 4) lrScore += 1.0;
+    const lr = Math.min(9.0, Math.max(1.0, lrScore)).toFixed(1);
+    
+    // 4. Nominalization Density Core Calculator
+    const nominalizations = (text.match(/\w+(tion|ment|ity|ance|ence)\b/gi) || []).length;
+    const nominalizationDensityRate = (nominalizations / totalWords) * 100;
+    let nomScore = 4.0 + (nominalizationDensityRate * 0.8);
+    const nom = Math.min(9.0, Math.max(1.0, nomScore)).toFixed(1);
+    
+    // 5. Grammatical Range & Accuracy Core Calculator
+    const punctuationCount = (text.match(/[,;.-]/g) || []).length;
+    let graScore = 4.0 + (punctuationCount / (totalWords / 40));
+    if (text.toLowerCase().includes("were governments to") || text.toLowerCase().includes("had they") || text.toLowerCase().includes("were healthcare") || text.toLowerCase().includes("were municipal")) graScore += 1.5; 
+    if (text.toLowerCase().includes("grammatical complexity")) graScore -= 2.0;
+    const gra = Math.min(9.0, Math.max(1.0, graScore)).toFixed(1);
+    
+    // Combined Overall Output Matrix
+    const band = ((parseFloat(tr) + parseFloat(cc) + parseFloat(lr) + parseFloat(nom) + parseFloat(gra)) / 5).toFixed(1);
+
+    // Update View Elements
+    document.getElementById('rName').innerText = document.getElementById('cName').value.trim() || "Anonymous Candidate";
+    document.getElementById('rID').innerText = document.getElementById('cID').value.trim() || "Not Provided";
+    document.getElementById('rTopic').innerText = activeTopic + " & Oral Competency Drill";
+    document.getElementById('rTR').innerText = tr;
+    document.getElementById('rCC').innerText = cc;
+    document.getElementById('rLR').innerText = lr;
+    document.getElementById('rNom').innerText = nom;
+    document.getElementById('rGRA').innerText = gra;
+    document.getElementById('rBand').innerText = band;
+    document.getElementById('certArea').style.display = 'block';
+    
+    document.getElementById('certArea').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Initial System Setup Trigger
+updateSpeakingQuestion();
+loadCompetency();
+</script>
+</body>
+</html>
